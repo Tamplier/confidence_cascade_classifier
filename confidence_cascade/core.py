@@ -70,7 +70,7 @@ class ConfidenceCascadeClassifier(BaseEstimator, ClassifierMixin):
 
   def _get_threshold(self, i: int, conf: np.ndarray) -> float:
     if not self.thresholds:
-      threshold = np.quantile(conf, 1 - i / len(self.classifiers))
+      threshold = np.quantile(conf, 1 - (i + 1) / len(self.classifiers))
       return threshold
     else:
       if not self.scaled_thresholds:
