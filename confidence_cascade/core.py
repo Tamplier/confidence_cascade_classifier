@@ -99,7 +99,16 @@ class ConfidenceCascadeClassifier(BaseEstimator, ClassifierMixin):
       conf = np.max(probs, axis=1)
       self._log(2, f'Classifier #{i} average confidence: {np.mean(conf):.2f}, std: {np.std(conf):.2f}')
       threshold = self._get_threshold(i, conf)
-      remain_idx = remain_idx[conf < threshold]
+      idx_mask = conf < threshold
+      self._log(
+        3,
+        f"""
+        Classifier #{i} max conf: {np.max(conf):.2f},
+        min conf: {np.min(conf):.2f},
+        quantile: {np.mean(idx_mask)}
+        """
+      )
+      remain_idx = remain_idx[idx_maskd]
 
       self.trained_classifiers.append(clf)
 

@@ -29,6 +29,29 @@ cascade = ConfidenceCascadeClassifier(
 )
 cascade.fit(X_train, y)
 
-probas = cascade.predict_proba(X_new)
-classes = cascade.predict(X_new)
+probas = cascade.predict_proba(X_test)
+classes = cascade.predict(X_test)
+```
+
+It's also possible to use the classifier with hyper-parameter optimizers.
+But in that case every inner classifier will be retrained for all param grid combinations.
+
+```
+cascade_params_grid = {
+  'scaled_thresholds': [True, False],
+  'thresholds': [
+    None,
+    [0.9, 0.9, 0.0],
+    [0.9, 0.75, 0.0]
+  ]
+}
+
+global_search = GridSearchCV(
+  cascade,
+  cascade_params_grid,
+  ...
+)
+
+global_search.fit(X_train, y)
+classes = global_search.predict(X_test)
 ```
