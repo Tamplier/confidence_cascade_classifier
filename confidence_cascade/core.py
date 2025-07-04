@@ -102,13 +102,15 @@ class ConfidenceCascadeClassifier(BaseEstimator, ClassifierMixin):
       idx_mask = conf < threshold
       self._log(
         3,
-        f"""
-        Classifier #{i} max conf: {np.max(conf):.2f},
-        min conf: {np.min(conf):.2f},
-        quantile: {np.mean(idx_mask)}
-        """
+        (
+          f"Classifier #{i} max conf: {np.max(conf):.2f},"
+          f"min conf: {np.min(conf):.2f},"
+          f"quantile: {np.mean(idx_mask)}"
+        )
       )
-      remain_idx = remain_idx[idx_maskd]
+      remain_idx = remain_idx[idx_mask]
+      if len(remain_idx) == 0:
+        break
 
       self.trained_classifiers.append(clf)
 
