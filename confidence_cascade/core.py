@@ -76,7 +76,7 @@ class ConfidenceCascadeClassifier(BaseEstimator, ClassifierMixin):
             raise ValueError('Incorrect fit params value')
 
     def _get_threshold(self, i: int, conf: np.ndarray) -> float:
-        self._log(3, 'Thresholds: {self.thresholds}')
+        self._log(3, f'Thresholds: {self.thresholds}')
         if not self.thresholds:
             threshold = np.quantile(conf, 1 - (i + 1) / len(self.classifiers))
             return threshold
