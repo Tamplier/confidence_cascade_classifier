@@ -58,6 +58,20 @@ class ConfidenceCascadeClassifier(BaseEstimator, ClassifierMixin):
         self.trained_classifiers = []
         self.classes_ = None
 
+    def get_params(self, deep=True):
+        return {
+            "classifiers": self.classifiers,
+            "thresholds": self.thresholds,
+            "scaled_thresholds": self.scaled_thresholds,
+            "fit_params": self.fit_params,
+            "verbosity": self.verbosity,
+        }
+
+    def set_params(self, **params):
+        for k, v in params.items():
+            setattr(self, k, v)
+        return self
+
     def _log(self, level: int, msg: str):
         if self.verbosity >= level:
             print(msg)
