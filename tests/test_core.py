@@ -1,13 +1,12 @@
 # pylint: disable=missing-docstring
 # pylint: disable=protected-access
 # pylint: disable=invalid-name
-# pylint: disable=attribute-defined-outside-init
 
 from unittest.mock import MagicMock
 import numpy as np
 import pytest
-from sklearn.base import BaseEstimator
 from confidence_cascade import ConfidenceCascadeClassifier
+from tests.utils import DummyClassifier, make_cascade
 
 TEST_PROBAS = [
     [
@@ -26,23 +25,6 @@ TEST_PROBAS = [
         [0.25, 0.5, 0.25]
     ]
 ]
-
-class DummyClassifier(BaseEstimator):
-    def fit(self, _X, y):
-        self.classes_ = np.unique(y)
-        return self
-
-    def predict_proba(self, X):
-        proba_col = X[:, 1].reshape(-1, 1)
-        return np.tile(proba_col, reps=(1, 3))
-
-    def predict(self, X):
-        return X[:, 0]
-
-def make_cascade(**kwargs):
-    defaults = dict(thresholds=None, scaled_thresholds=False, classifiers=None, fit_params=None)
-    defaults.update(kwargs)
-    return ConfidenceCascadeClassifier(**defaults)
 
 @pytest.mark.parametrize(
     'i,fit_params,expected',

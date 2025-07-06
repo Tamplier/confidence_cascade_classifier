@@ -78,13 +78,12 @@ class ConfidenceCascadeClassifier(BaseEstimator, ClassifierMixin):
             print(msg)
 
     def _is_classifier_fitted(self, classifier):
-
         try:
             check_is_fitted(classifier)
-            self._log(3, f'Classifier {type(classifier)} is fidded')
+            self._log(3, f'Classifier {type(classifier)} is fitted')
             return True
         except NotFittedError:
-            self._log(3, f'Classifier {type(classifier)} is not fidded')
+            self._log(3, f'Classifier {type(classifier)} is not fitted')
             return False
 
     def _get_fit_params(self, i: int) -> dict:

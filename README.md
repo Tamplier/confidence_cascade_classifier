@@ -8,7 +8,7 @@ pip install git+https://github.com/Tamplier/confidence_cascade_classifier.git
 from xgboost import XGBClassifier
 from lightgbm import LGBMClassifier
 from sklearn.ensemble import ExtraTreesClassifier
-from confidence_cascade import ConfidenceCascadeClassifier
+from confidence_cascade import ConfidenceCascadeClassifier, FrozenClassifier
 
 xgb_params = {
   # Search params
@@ -37,6 +37,18 @@ It's also possible to use the classifier with hyper-parameter optimizers.
 But in that case every inner classifier will be retrained for all param grid combinations.
 
 ```
+xgb_classifier = search_xgb.best_estimator_
+# It's not required but first classifier always will use 100% of initial DataFrame
+# So it will be one and the same classifier for all iterations
+# And this wrapper prevents optimizer from refitting first classifier
+xgb_classifier = FrozenClassifier(xgb_classifier)
+
+cascade = ConfidenceCascadeClassifier(
+  classifiers=[xgb_classifier, search_lgb, search_et],
+  thresholds=[0.9, 0.8, 0.0],
+  verbosity=2
+)
+
 cascade_params_grid = {
   'scaled_thresholds': [True, False],
   'thresholds': [
