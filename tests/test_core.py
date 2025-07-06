@@ -1,10 +1,12 @@
 # pylint: disable=missing-docstring
 # pylint: disable=protected-access
 # pylint: disable=invalid-name
+# pylint: disable=attribute-defined-outside-init
 
 from unittest.mock import MagicMock
 import numpy as np
 import pytest
+from sklearn.base import BaseEstimator
 from confidence_cascade import ConfidenceCascadeClassifier
 
 TEST_PROBAS = [
@@ -25,8 +27,9 @@ TEST_PROBAS = [
     ]
 ]
 
-class DummyClassifier:
-    def fit(self, _X, _y):
+class DummyClassifier(BaseEstimator):
+    def fit(self, _X, y):
+        self.classes_ = np.unique(y)
         return self
 
     def predict_proba(self, X):
@@ -154,7 +157,7 @@ def test_predict(mocked_return, expected, monkeypatch):
     np.testing.assert_array_equal(y, expected)
 
 @pytest.mark.parametrize(
-    'thresholds,X,scale,expected',
+    'thresholds,X,scale,first_fitted,expected',
     [
       (
           [0.9, 0.5, 0],
@@ -164,6 +167,7 @@ def test_predict(mocked_return, expected, monkeypatch):
               [0, 0.49],
               [0, 0]
           ],
+          False,
           False,
           [4, 3, 2]
       ),
@@ -177,17 +181,32 @@ def test_predict(mocked_return, expected, monkeypatch):
               [0, 0]
           ],
           True,
+          False,
           [5, 4, 2]
+      ),
+      (
+          [0.9, 0],
+          [
+              [0, 0.91],
+              [0, 0.89]
+          ],
+          False,
+          True,
+          [1] # Skip first classifier because it's already trained
       )
     ]
 )
-def test_fit(thresholds, X, scale, expected, monkeypatch):
-    clfs = [DummyClassifier() for _i in range(3)]
+def test_fit(thresholds, X, scale, first_fitted, expected, monkeypatch):
+    y = np.array(X)[:, 0]
+    clfs_amount = len(thresholds)
+    clfs = [DummyClassifier() for _i in range(clfs_amount)]
+    if first_fitted:
+        clfs[0].fit(X, y)
     mock_fit = MagicMock()
     for clf in clfs:
         monkeypatch.setattr(clf, "fit", mock_fit)
     cascade = make_cascade(thresholds=thresholds, scaled_thresholds=scale, classifiers=clfs)
-    cascade.fit(X, np.array(X)[:, 0])
+    cascade.fit(X, y)
     for expected_len, call in zip(expected, mock_fit.call_args_list):
         X_arg = call.args[0]
         assert len(X_arg) == expected_len

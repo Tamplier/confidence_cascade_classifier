@@ -1,11 +1,14 @@
 # pylint: disable=invalid-name
 # pylint: disable=too-many-arguments
 # pylint: disable=missing-docstring
+# pylint: disable=attribute-defined-outside-init
 
 from typing import List, Union, Optional, Protocol, Literal, runtime_checkable
 from functools import partial
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.utils.validation import check_is_fitted
+from sklearn.exceptions import NotFittedError
 
 @runtime_checkable
 class ClassifierOrOptimizer(Protocol):
@@ -55,8 +58,6 @@ class ConfidenceCascadeClassifier(BaseEstimator, ClassifierMixin):
         self.scaled_thresholds = scaled_thresholds
         self.fit_params = fit_params
         self.verbosity = verbosity
-        self.trained_classifiers = []
-        self.classes_ = None
 
     def get_params(self, deep=True):
         return {
@@ -75,6 +76,13 @@ class ConfidenceCascadeClassifier(BaseEstimator, ClassifierMixin):
     def _log(self, level: int, msg: str):
         if self.verbosity >= level:
             print(msg)
+
+    def _is_classifier_fitted(self, classifier):
+        try:
+            check_is_fitted(classifier)
+            return True
+        except NotFittedError:
+            return False
 
     def _get_fit_params(self, i: int) -> dict:
         if not self.fit_params:
@@ -101,6 +109,7 @@ class ConfidenceCascadeClassifier(BaseEstimator, ClassifierMixin):
                 return np.max(conf) * self.thresholds[i]
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> 'ConfidenceCascadeClassifier':
+        self.trained_classifiers = []
         self.classes_ = np.unique(y)
         X = np.array(X)
         y = np.array(y)
@@ -111,13 +120,15 @@ class ConfidenceCascadeClassifier(BaseEstimator, ClassifierMixin):
             self._log(2, f'Classifier #{i} uses {df_percentage:.2f}% of initial DataFrame')
             X_sub = X[remain_idx]
             y_sub = y[remain_idx]
-            kwargs = self._get_fit_params(i)
-
-            clf.fit(X_sub, y_sub, **kwargs)
+            trained_first = i == 0 and self._is_classifier_fitted(clf)
+            if not trained_first:
+                kwargs = self._get_fit_params(i)
+                clf.fit(X_sub, y_sub, **kwargs)
+            else:
+                self._log(2, f'Classifier #{i} already fitted, skip fit step')
             probs = clf.predict_proba(X_sub)
             if hasattr(clf, 'best_params_'):
                 self._log(2, f'Classifier #{i} best params: {clf.best_params_}')
-            print(probs)
             conf = np.max(probs, axis=1)
             self._log(2, f'Classifier #{i} average confidence: {np.mean(conf):.2f}, std: {np.std(conf):.2f}')
             threshold = self._get_threshold(i, conf)
