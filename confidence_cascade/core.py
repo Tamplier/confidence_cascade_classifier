@@ -78,10 +78,13 @@ class ConfidenceCascadeClassifier(BaseEstimator, ClassifierMixin):
             print(msg)
 
     def _is_classifier_fitted(self, classifier):
+
         try:
             check_is_fitted(classifier)
+            self._log(3, f'Classifier {type(classifier)} is fidded')
             return True
         except NotFittedError:
+            self._log(3, f'Classifier {type(classifier)} is not fidded')
             return False
 
     def _get_fit_params(self, i: int) -> dict:
@@ -123,6 +126,7 @@ class ConfidenceCascadeClassifier(BaseEstimator, ClassifierMixin):
             trained_first = i == 0 and self._is_classifier_fitted(clf)
             if not trained_first:
                 kwargs = self._get_fit_params(i)
+                self._log(2, f'Classifier #{i} start fitting')
                 clf.fit(X_sub, y_sub, **kwargs)
             else:
                 self._log(2, f'Classifier #{i} already fitted, skip fit step')
