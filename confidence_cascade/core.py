@@ -108,7 +108,7 @@ class ConfidenceCascadeClassifier(BaseEstimator, ClassifierMixin):
             if not self.scaled_thresholds:
                 return self.thresholds[i]
             else:
-                return np.max(conf) * self.thresholds[i]
+                return np.quantile(conf, self.thresholds[i])
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> 'ConfidenceCascadeClassifier':
         self.trained_classifiers = []

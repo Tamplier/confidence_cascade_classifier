@@ -58,9 +58,8 @@ class TestGetThreshold:
 
     def test_scaled(self):
         cascade = make_cascade(thresholds=self.thresholds, scaled_thresholds=True)
-        max_confidence = np.max(self.confidences)
         for i, threshold_orig in enumerate(self.thresholds):
-            threshold_required = threshold_orig * max_confidence
+            threshold_required = np.quantile(self.confidences, threshold_orig)
             threshold_received = cascade._get_threshold(i, self.confidences)
             assert threshold_received == threshold_required
 
@@ -154,7 +153,7 @@ def test_predict(mocked_return, expected, monkeypatch):
           [4, 3, 2]
       ),
       (
-          [0.9, 0.9, 0],
+          [0.9, 0.6, 0],
           [
               [0, 0.2],
               [0, 0.15],
